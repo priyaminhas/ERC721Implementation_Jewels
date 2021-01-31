@@ -48,6 +48,7 @@ contract SparklesToken is ERC721Standard {
         safeMint(_owner, tokenId);
         uint _index = getTokenIndexByTokenID(tokenId);
         jewels[_index].token_id = _index;
+        idToOwner[tokenId] = _owner;
         notSoldJewels++;
     }
 
@@ -67,5 +68,4 @@ contract SparklesToken is ERC721Standard {
         //jewl[token_id].owner = msg.sender;
         notSoldJewels--;
     }
-
 }

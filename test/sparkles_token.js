@@ -30,10 +30,10 @@ contract("ERC721Standard", function ( accounts ) {
   });
 
   it("should test ownerOf() function", async () => {
-    const tokenId = 1;
+    const tokenId = 0;
     const addressExpected = owner;
-    const ownertx = await token.ownerOf.call(tokenId);
-    assert(ownertx === addressExpected, "This is not expected owner");
+    const ownerAddress = await token.ownerOf.call(tokenId);
+    assert(ownerAddress === addressExpected, "This is not expected owner");
   });
 
   it("should test getApproved() function", async() => {
@@ -42,6 +42,7 @@ contract("ERC721Standard", function ( accounts ) {
     let tx = await token.getApproved.call(tokenId);
     assert(tx === addressExpected, "This is not expected approving token Id");
   });
+
 
   it("should test setApprovalForAll() and also test isApprovedForAll() function", async () => {
     const receipt = await token.setApprovalForAll(owner, true, {
@@ -58,8 +59,32 @@ contract("ERC721Standard", function ( accounts ) {
     assert(receipt2 === true, "This is not expected output");
   });
 
+  it("should test transferFrom() is able to transfer", async () => {
+    const token_id = 0;
+    const ownerBalanceBefore = await token.balanceOf.call(owner);
+    const userBalanceBefore  = await token.balanceOf.call(user1);
+   // console.log("ownerBalanceBefore:"+ownerBalanceBefore); 4
+//console.log("userBalanceBefore:"+userBalanceBefore); 0
+    const tokenReceipt = await token.transferFrom(owner,user1,token_id,{from:owner});
+
+    const ownerBalanceAfter = await token.balanceOf.call(owner);
+    const userBalanceAfter  = await token.balanceOf.call(user1);
+   // console.log("ownerBalanceAfter:"+ownerBalanceAfter); 4
+//console.log("userBalanceAfter:"+userBalanceAfter); 1
+    const tokenOwner        = await token.ownerOf(token_id);
+    
+    assert(tokenOwner === user1, "This is not expected owner");
+
+    assert(new BigNumber(ownerBalanceBefore).minus(new BigNumber(ownerBalanceAfter)).isEqualTo(new BigNumber(userBalanceAfter)),"The expected supply is not correct");
+
+    truffleAssert.eventEmitted(tokenReceipt, "Transfer", (obj) => {
+      return (obj._from === owner && obj._to === user1 && new BigNumber(obj._tokenId).isEqualTo(new BigNumber(token_id)));
+    });
+
+  });
+
   it("should test safetransferFrom()", async () => {
-    const tokenId = 0;
+    const tokenId = 1;
     const ownerBalanceBefore = await token.balanceOf.call(owner);
     const userBalanceBefore  = await token.balanceOf.call(user1);
     const tokenReceipt = await token.transferFrom(owner, user1, tokenId, {
@@ -79,27 +104,8 @@ contract("ERC721Standard", function ( accounts ) {
     });
   });
 
-  it("should test transferFrom() is able to transfer", async () => {
-    const token_id = 0;
-    const ownerBalanceBefore = await token.balanceOf.call(owner);
-    const userBalanceBefore  = await token.balanceOf.call(user1);
-
-    const tokenReceipt = await token.transferFrom(owner,user1,token_id,{from:owner});
-
-    const ownerBalanceAfter = await token.balanceOf.call(owner);
-    const userBalanceAfter  = await token.balanceOf.call(user1);
-    const tokenOwner        = await token.ownerOf(token_id);
-
-    assert(tokenOwner === user1, "This is not expected owner");
-
-    assert(new BigNumber(ownerBalanceBefore).minus(new BigNumber(ownerBalanceAfter)).isEqualTo(new BigNumber(userBalanceAfter)),"The expected supply is not correct");
-
-    truffleAssert.eventEmitted(tokenReceipt, "Transfer", (obj) => {
-      return (obj._from === owner && obj._to === user1 && new BigNumber(obj._tokenId).isEqualTo(new BigNumber(token_id)));
-    });
-
-  });
-
+ 
+ 
   // it("should test apporved() function",async()  => {
   //   const support = await token.supportsInterface
   //   const _INTERFACE_ID_ERC165 = '0x01ffc9a7';
@@ -133,12 +139,11 @@ contract("SparklesToken",function(accounts) {
   });
 
   it("should be able to create a token", async () => {
-    const token_id = 1;
+    const token_id = 3;
     const sparklesReceipt = await jewelToken.createToken(tokenName,tokenDescription,tokenDate,tokenPrice,tokenImage_url,tokenRarity,tokenLocation,user2);
     
-    console.log(sparklesReceipt);
     const mintNew = await jewelToken.mint(user2,token_id);
-    truffleAssert.eventEmitted(mintedTx, "Transfer", (obj) => {
+    truffleAssert.eventEmitted(mintNew, "Transfer", (obj) => {
       return (
         obj._from === "0x0000000000000000000000000000000000000000" && obj._to === user2 && new BigNumber(obj._tokenId).isEqualTo(new BigNumber(token_id))
       );
@@ -146,16 +151,9 @@ contract("SparklesToken",function(accounts) {
 
     assert(sparklesReceipt,tokenName,tokenDescription,tokenPrice,tokenDate,user2,tokenImage_url,tokenRarity,tokenLocation,"This is not expected information");
 
-    const tokenReceipt = await jewelToken.idToOwner(token_id);
-    assert(tokenReceipt === user2, "The owner of token does not match with one created");
+    const tokenOwner = await jewelToken.idToOwner(token_id);
+    assert(tokenOwner === user2, "The owner of token does not match with one created");
 
   });
+  
 });
-// it("Check pre-created token'", async () => {
-//   const token_id = 0;
-//   const receiptToken = await token.createToken(token_id);
-//   assert(
-//     receiptToken.name === tokenName,
-//     "This is not expected Token Name"
-//   );
-// });

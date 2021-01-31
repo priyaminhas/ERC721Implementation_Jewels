@@ -29,7 +29,6 @@ contract ERC721Standard is ERC721,IERC721Enumerable,IERC721Metadata {
     
     // optional
     string private _baseURI;
-    
     constructor(string memory name_, string memory symbol_) {
         _name = name_;
         _symbol = symbol_;
@@ -165,7 +164,7 @@ contract ERC721Standard is ERC721,IERC721Enumerable,IERC721Metadata {
         
         // add _to from _holderToTokens
         _holderToTokens[_to].push(_tokenId);
-        
+        _tokenIdToHolder[_tokenId] = _to;
         // emit event
         emit Transfer(_from, _to, _tokenId);
     }
@@ -195,7 +194,7 @@ contract ERC721Standard is ERC721,IERC721Enumerable,IERC721Metadata {
         require(!_exists(_tokenId),"ERC721: approved query for nonexistant token");
         
         _holderToTokens[_to].push(_tokenId);
-        
+        _tokenIdToHolder[_tokenId] = _to;
         _tokenIDs.push(_tokenId);
         uint _index = _tokenIDs.length - 1;
         _tokenIDToTokenIndex[_tokenId] = _index;
